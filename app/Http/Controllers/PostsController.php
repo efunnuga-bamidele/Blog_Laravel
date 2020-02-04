@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Category;
 use App\Post;
+use Illuminate\Http\Request;
 use Session;
 
 class PostsController extends Controller
@@ -16,7 +16,7 @@ class PostsController extends Controller
      */
     public function index()
     {
-       return view('admin.posts.index')->with('posts', Post::all());
+        return view('admin.posts.index')->with('posts', Post::all());
     }
 
     /**
@@ -28,8 +28,7 @@ class PostsController extends Controller
     {
         $categories = Category::all();
 
-        if($categories->count() == 0)
-        {
+        if ($categories->count() == 0) {
             Session::flash('info', 'You must have some categories before attempting to create a post');
 
             //
@@ -51,29 +50,29 @@ class PostsController extends Controller
 
         // dd($request->all());
 
-        $this->validate($request,[
+        $this->validate($request, [
             'title' => 'required',
             'featured' => 'required|image',
             'content' => 'required',
-            'category_id' => 'required'
+            'category_id' => 'required',
         ]);
         // dd($request->all());
 
         // Rename uploaded image and move to public upload folder
         $featured = $request->featured;
 
-        $featured_new_name = time().$featured->getClientOriginalName();
+        $featured_new_name = time() . $featured->getClientOriginalName();
 
-        $featured->move('uploads/posts/', $featured_new_name );
+        $featured->move('uploads/posts/', $featured_new_name);
 
         // Other method to save to database
         $post = Post::create([
 
             'title' => $request->title,
             'content' => $request->content,
-            'featured' => 'uploads/posts/'. $featured_new_name,
+            'featured' => 'uploads/posts/' . $featured_new_name,
             'category_id' => $request->category_id,
-            'slug' => str_slug($request->title)
+            'slug' => str_slug($request->title),
 
         ]);
 
@@ -149,5 +148,17 @@ class PostsController extends Controller
         Session::flash('success', 'The post was deleted permanently');
 
         return redirect()->back();
+    }
+
+    public function restore($id)
+    {
+
+        $post = Post::withTrashed()->where('id', $id)->first();
+
+        $post->restore();
+
+        Session::flash('success', 'Post was restored successfully.');
+
+        return redirect()->route('posts');
     }
 }
